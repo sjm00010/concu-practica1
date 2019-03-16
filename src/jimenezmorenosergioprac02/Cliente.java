@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import jimenezmorenosergioprac02.JimenezMorenoSergioPrac02.Atributos;
 import jimenezmorenosergioprac02.JimenezMorenoSergioPrac02.TipoCliente;
 
 /**
@@ -27,16 +28,13 @@ public class Cliente implements Runnable{
     private int mesa;
     private int platosPedido;
     private Plato plato;
-    private Pedido pedido;
     
     private Random generador = new Random();
     
     // Variables de instancia
     private int id;
     private TipoCliente tipoCliente;
-    private int esperandoPremium;
-    private int esperandoNormal;
-    private int mesasLibres;
+    private Atributos atributos;
     private ArrayList<Pedido> listaPlatos;
     private ArrayList<Plato>[] pedidoCliente;
     
@@ -48,6 +46,24 @@ public class Cliente implements Runnable{
     private Semaphore semPedidos;
     private Semaphore semMesa;
 
+    public Cliente( int id, TipoCliente tipoCliente, Atributos atributos, ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmRestaurante, Semaphore semPremium, Semaphore semNormal, Semaphore exmCocina, Semaphore semPedidos) {
+        this.id = id;
+        this.tipoCliente = tipoCliente;
+        this.atributos.esperandoPremium = atributos.esperandoPremium;
+        this.atributos.esperandoNormal = atributos.esperandoNormal;
+        this.atributos.mesasLibres = atributos.mesasLibres;
+        this.listaPlatos = listaPlatos;
+        this.pedidoCliente = pedidoCliente;
+        this.exmRestaurante = exmRestaurante;
+        this.semPremium = semPremium;
+        this.semNormal = semNormal;
+        this.exmCocina = exmCocina;
+        this.semPedidos = semPedidos;
+        this.semMesa = new Semaphore(0);
+    }
+
+    
+    
     @Override
     public void run() {
         try {
@@ -66,22 +82,22 @@ public class Cliente implements Runnable{
 
     private void entrarRestaurante() throws InterruptedException{
         exmRestaurante.wait();
-        if(mesasLibres == 0){
+        if(atributos.mesasLibres == 0){
             if(tipoCliente == TipoCliente.PREMIUM){
-                esperandoPremium++;
+                atributos.esperandoPremium++;
                 exmRestaurante.notify();
                 semPremium.wait();
-                esperandoPremium--;
+                atributos.esperandoPremium--;
             }else{
-                esperandoNormal++;
+                atributos.esperandoNormal++;
                 exmRestaurante.notify();
                 semNormal.wait();
-                esperandoNormal--;
+                atributos.esperandoNormal--;
             }
         }
         // sería exmRestaurante.wait();
-        mesa=mesasLibres;
-        mesasLibres--;
+        mesa=atributos.mesasLibres;
+        atributos.mesasLibres--;
         exmRestaurante.notify();
     }
     
@@ -109,10 +125,10 @@ public class Cliente implements Runnable{
     
     private void salirRestaurante() throws InterruptedException{
         exmRestaurante.wait();
-        mesasLibres++;
-        if(esperandoPremium > 0){
+        atributos.mesasLibres++;
+        if(atributos.esperandoPremium > 0){
             semPremium.notify();
-        }else if (esperandoNormal > 0){
+        }else if (atributos.esperandoNormal > 0){
             semNormal.notify();
         }else{
             exmRestaurante.notify();
@@ -130,13 +146,13 @@ public class Cliente implements Runnable{
     }
 
     private Plato generarPlato() {
-        Plato plato;
+        Plato platoAleatorio;
         if(tipoCliente == TipoCliente.NORMAL){
-            plato = new Plato(generador.nextInt((MAX_PRECIO_NORMAL-MIN_PRECIO_NORMAL))+MIN_PRECIO_NORMAL);
+            platoAleatorio = new Plato(generador.nextInt((MAX_PRECIO_NORMAL-MIN_PRECIO_NORMAL))+MIN_PRECIO_NORMAL);
         }else{
-            plato = new Plato(generador.nextInt((MAX_PRECIO_PREMIUM-MIN_PRECIO_PREMIUM))+MIN_PRECIO_PREMIUM);
+            platoAleatorio = new Plato(generador.nextInt((MAX_PRECIO_PREMIUM-MIN_PRECIO_PREMIUM))+MIN_PRECIO_PREMIUM);
         }
-        return plato;
+        return platoAleatorio;
     }
 
     private void comer() throws InterruptedException {

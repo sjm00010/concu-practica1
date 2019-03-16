@@ -28,6 +28,15 @@ public class Cocina implements Runnable{
     private Semaphore exmCocina;
     private Semaphore semPedidos;
 
+    public Cocina( ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmCocina, Semaphore semPedidos) {
+        this.finServicio = false;
+        this.recaudacion = 0;
+        this.listaPlatos = listaPlatos;
+        this.pedidoCliente = pedidoCliente;
+        this.exmCocina = exmCocina;
+        this.semPedidos = semPedidos;
+    }
+    
     @Override
     public void run() {
         do{
