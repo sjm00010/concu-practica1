@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import jimenezmorenosergioprac02.JimenezMorenoSergioPrac02.Atributos;
 import jimenezmorenosergioprac02.JimenezMorenoSergioPrac02.TipoCliente;
 
 /**
  * @author Sergio Jiménez Moreno
  */
-public class Cliente implements Runnable{
+public class Cliente implements Callable<Integer>{
     // Constantes
     private final int TIEMPO_LLEGADA = 10;
     private final int MIN_PLATOS = 3;
@@ -25,6 +25,7 @@ public class Cliente implements Runnable{
     private final int MAX_TIEMPO_COMER = 5;
     
     // Variables locales
+    private int total;
     private int mesa;
     private int platosPedido;
     private Plato plato;
@@ -60,12 +61,13 @@ public class Cliente implements Runnable{
         this.exmCocina = exmCocina;
         this.semPedidos = semPedidos;
         this.semMesa = new Semaphore(0);
+        this.total = 0;
     }
-
+ 
     
     
     @Override
-    public void run() {
+    public Integer call() {
         try {
             llegar();
             System.out.println("CLIENTE("+id+")- Llegada al restaurante : "+new Date());
@@ -78,6 +80,7 @@ public class Cliente implements Runnable{
         } catch (InterruptedException ex) {
             System.out.println("CLIENTE("+id+") - Se produjo un error, proceso interumpido.");
         }
+        return total;
     }
 
     private void entrarRestaurante() throws InterruptedException{
@@ -119,6 +122,7 @@ public class Cliente implements Runnable{
             semMesa.wait();
             plato = pedidoCliente[id].remove(0);
             System.out.println("CLIENTE("+id+")- Pidio un plato de "+plato.getPrecio()+" EUROS");
+            total += plato.getPrecio();
             comer();
         }
     }

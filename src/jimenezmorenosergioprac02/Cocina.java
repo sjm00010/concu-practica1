@@ -18,7 +18,6 @@ public class Cocina implements Runnable{
     private Plato plato;
     private Pedido pedido;
     private boolean finServicio;
-    private int recaudacion;
     
     // Variables de instancia
     private ArrayList<Pedido> listaPlatos;
@@ -30,7 +29,6 @@ public class Cocina implements Runnable{
 
     public Cocina( ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmCocina, Semaphore semPedidos) {
         this.finServicio = false;
-        this.recaudacion = 0;
         this.listaPlatos = listaPlatos;
         this.pedidoCliente = pedidoCliente;
         this.exmCocina = exmCocina;
@@ -46,7 +44,6 @@ public class Cocina implements Runnable{
                 servirPedido();
             } catch (InterruptedException ex) {
                 System.out.println("COCINA - El proceso va a finalizar.");
-                System.out.println("COCINA - Se ha recaudado un total de "+recaudacion+" EUROS.");
                 finServicio = true;
             }
         }while(!finServicio);
@@ -62,7 +59,6 @@ public class Cocina implements Runnable{
         idCliente = pedido.getIdCliente();
         mesa = pedido.getSemMesa();
         plato = pedido.getPlato();
-        recaudacion += plato.getPrecio();
     }
     
     private void servirPedido(){
