@@ -38,10 +38,8 @@ public class JimenezMorenoSergioPrac02 {
         Atributos atributos = new Atributos();
         
         ArrayList<Pedido> listaPlatos = new ArrayList<>();
-        ArrayList<Plato>[] pedidoCliente = new ArrayList<Plato>[NUM_CLIENTES];
-        for (int i = 0; i < NUM_CLIENTES; i++) {
-            pedidoCliente[i] = new ArrayList<>();
-        }
+        //ArrayList<Plato>[] pedidoCliente = new ArrayList<>(NUM_CLIENTES);
+        ArrayList<ArrayList<Plato>> pedidoCliente = new ArrayList<>();
         
         for (int i = 0; i < NUM_CLIENTES; i++) {
             Cliente nuevoCliente;
