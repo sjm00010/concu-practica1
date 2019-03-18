@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -25,8 +24,11 @@ public class JimenezMorenoSergioPrac02 {
     public static void main(String[] args) {
         // Constantes
         final int NUM_CLIENTES = 20;
+        final int INICIO_VARIABLES = 0;
+        final int AFORO = 10;
     
         ExecutorService executor = new ForkJoinPool();
+        ExecutorService executorCocina = new ForkJoinPool();
         
         List<Cliente> clientes = new ArrayList<>();
         
@@ -35,12 +37,14 @@ public class JimenezMorenoSergioPrac02 {
         Semaphore semNormal = new Semaphore(0);
         Semaphore exmCocina = new Semaphore(1);
         Semaphore semPedidos = new Semaphore(0);
-        Atributos atributos = new Atributos();
+        Atributos atributos = new Atributos(INICIO_VARIABLES, INICIO_VARIABLES, AFORO);
         
         ArrayList<Pedido> listaPlatos = new ArrayList<>();
-        //ArrayList<Plato>[] pedidoCliente = new ArrayList<>(NUM_CLIENTES);
-        ArrayList<ArrayList<Plato>> pedidoCliente = new ArrayList<>();
-        
+        ArrayList[] pedidoCliente = new ArrayList[NUM_CLIENTES];
+        for (int i = 0; i < NUM_CLIENTES; i++) {
+            pedidoCliente[i] = new ArrayList<Plato>();
+        }
+        System.out.println("Hilo(PRINCIPAL) : Crea los clientes");
         for (int i = 0; i < NUM_CLIENTES; i++) {
             Cliente nuevoCliente;
             if(i%2 == 0){
@@ -51,31 +55,34 @@ public class JimenezMorenoSergioPrac02 {
             clientes.add(nuevoCliente);
         }
         
+        System.out.println("Hilo(PRINCIPAL) : Crea la cocina");
         Cocina cocina = new Cocina(listaPlatos, pedidoCliente, exmCocina, semPedidos);
-        Thread hiloCocina = new Thread(cocina);
-        hiloCocina.start();
+        System.out.println("Hilo(PRINCIPAL) : Ejecuta la cocina");
+        executorCocina.execute(cocina);
         
+        System.out.println("Hilo(PRINCIPAL) : Ejecuta los clientes y espera a que finalicen");
         List<Future<Integer>> listaTareas = new ArrayList();
         try {
             listaTareas = executor.invokeAll(clientes);
         } catch (InterruptedException ex) {
-            Logger.getLogger(JimenezMorenoSergioPrac02.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Hilo(PRINCIPAL) : Error al invocar los clientes");
         }
+        System.out.println("Hilo(PRINCIPAL) : Los clientes han finalizado");
+        
+        System.out.println("Hilo(PRINCIPAL) : Va a calcular la recaudación total");
         int recaudacion=0;
         for (Future<Integer> listaTarea : listaTareas) {
             try {
                 recaudacion += listaTarea.get();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(JimenezMorenoSergioPrac02.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ExecutionException ex) {
-                Logger.getLogger(JimenezMorenoSergioPrac02.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InterruptedException | ExecutionException ex) {
+                System.out.println("Hilo(PRINCIPAL) : Error al calcular la recaudación");
             }
         }
+        System.out.println("Hilo(PRINCIPAL) : La recaudación total a sido "+recaudacion+" €");
         
-        System.out.println("Hilo(PRINCIPAL) : La recaudacion total a sido "+recaudacion+" EUROS");
-        
+        System.out.println("Hilo(PRINCIPAL) : Va a interrumpir la cocina y los clientes.");
         executor.shutdown();
-        hiloCocina.interrupt();
+        executorCocina.shutdown();
         
     }
     

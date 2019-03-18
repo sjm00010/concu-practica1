@@ -20,9 +20,9 @@ public class Pedido implements Comparable<Pedido>{
     @Override
     public int compareTo(Pedido o) {
         int resultado;
-        if(plato.getPrecio() < this.plato.getPrecio()){
+        if(o.plato.getPrecio() < this.plato.getPrecio()){
             resultado = -1;
-        }else if(plato.getPrecio() > this.plato.getPrecio()){
+        }else if(o.plato.getPrecio() > this.plato.getPrecio()){
             resultado = 1;
         }else{
             resultado = 0;

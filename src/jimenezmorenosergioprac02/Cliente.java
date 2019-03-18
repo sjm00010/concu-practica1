@@ -50,9 +50,7 @@ public class Cliente implements Callable<Integer>{
     public Cliente( int id, TipoCliente tipoCliente, Atributos atributos, ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmRestaurante, Semaphore semPremium, Semaphore semNormal, Semaphore exmCocina, Semaphore semPedidos) {
         this.id = id;
         this.tipoCliente = tipoCliente;
-        this.atributos.esperandoPremium = atributos.esperandoPremium;
-        this.atributos.esperandoNormal = atributos.esperandoNormal;
-        this.atributos.mesasLibres = atributos.mesasLibres;
+        this.atributos = atributos;
         this.listaPlatos = listaPlatos;
         this.pedidoCliente = pedidoCliente;
         this.exmRestaurante = exmRestaurante;
@@ -63,16 +61,15 @@ public class Cliente implements Callable<Integer>{
         this.semMesa = new Semaphore(0);
         this.total = 0;
     }
- 
-    
     
     @Override
     public Integer call() {
         try {
+            System.out.println("CLIENTE("+id+")-"+tipoCliente+"- Llegando al restaurante");
             llegar();
-            System.out.println("CLIENTE("+id+")- Llegada al restaurante : "+new Date());
+            System.out.println("CLIENTE("+id+")-"+tipoCliente+"- Llegada al restaurante : "+new Date());
             entrarRestaurante();
-            System.out.println("CLIENTE("+id+")- Entrada al restaurante : "+new Date());
+            System.out.println("CLIENTE("+id+")-"+tipoCliente+"- Entrada al restaurante : "+new Date());
             hacerPedido();
             comerPedido();
             salirRestaurante();
@@ -84,58 +81,61 @@ public class Cliente implements Callable<Integer>{
     }
 
     private void entrarRestaurante() throws InterruptedException{
-        exmRestaurante.wait();
-        if(atributos.mesasLibres == 0){
+        exmRestaurante.acquire();
+        if(atributos.getMesasLibres() == 0){
             if(tipoCliente == TipoCliente.PREMIUM){
-                atributos.esperandoPremium++;
-                exmRestaurante.notify();
-                semPremium.wait();
-                atributos.esperandoPremium--;
+                atributos.incrementaEsperandoPremium();
+                exmRestaurante.release();
+                semPremium.acquire();
+                atributos.decrementaEsperandoPremium();
             }else{
-                atributos.esperandoNormal++;
-                exmRestaurante.notify();
-                semNormal.wait();
-                atributos.esperandoNormal--;
+                atributos.incrementaEsperandoNormal();
+                exmRestaurante.release();
+                semNormal.acquire();
+                atributos.decrementaEsperandoNormal();
             }
         }
         // sería exmRestaurante.wait();
-        mesa=atributos.mesasLibres;
-        atributos.mesasLibres--;
-        exmRestaurante.notify();
+        mesa=atributos.getMesasLibres();
+        System.out.println("DATO - Aforo : "+atributos.getMesasLibres());
+        atributos.decrementaMesasLibres();
+        exmRestaurante.release();
     }
     
     private void hacerPedido() throws InterruptedException{
         platosPedido = generarNumPlatos();
+        System.out.println("CLIENTE("+id+")- Precios de los "+platosPedido+" platos pedidos : ");
         for (int i = 0; i < platosPedido; i++) {
             plato = generarPlato();
             Pedido pedido = new Pedido(plato, semMesa, id);
-            exmCocina.wait();
+            exmCocina.acquire();
             listaPlatos.add(pedido);
-            Collections.sort(listaPlatos);
-            exmCocina.notify();
-            semPedidos.notify();
+            exmCocina.release();
+            semPedidos.release();
+            System.out.print(plato.getPrecio()+"€ ");
         }
+        System.out.println("");
     }
     
     private void comerPedido() throws InterruptedException{
         for (int i = 0; i < platosPedido; i++) {
-            semMesa.wait();
+            semMesa.acquire();
             plato = pedidoCliente[id].remove(0);
-            System.out.println("CLIENTE("+id+")- Pidio un plato de "+plato.getPrecio()+" EUROS");
+            //System.out.println("CLIENTE("+id+")- Come un plato de "+plato.getPrecio()+" €");
             total += plato.getPrecio();
             comer();
         }
     }
     
     private void salirRestaurante() throws InterruptedException{
-        exmRestaurante.wait();
-        atributos.mesasLibres++;
-        if(atributos.esperandoPremium > 0){
-            semPremium.notify();
-        }else if (atributos.esperandoNormal > 0){
-            semNormal.notify();
+        exmRestaurante.acquire();
+        atributos.incrementaMesasLibres();
+        if(atributos.getEsperandoPremium() > 0){
+            semPremium.release();
+        }else if (atributos.getEsperandoNormal() > 0){
+            semNormal.release();
         }else{
-            exmRestaurante.notify();
+            exmRestaurante.release();
         }
     }
     

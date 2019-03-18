@@ -51,19 +51,22 @@ public class Cocina implements Runnable{
     }
     
     private void recogerPedido() throws InterruptedException{
-        semPedidos.wait();
-        exmCocina.wait();
-        pedido = listaPlatos.get(0);
-        exmCocina.notify();
+        semPedidos.acquire();
+        exmCocina.acquire();
+        listaPlatos.sort(null);
+        pedido = listaPlatos.remove(0);
+        exmCocina.release();
         
         idCliente = pedido.getIdCliente();
         mesa = pedido.getSemMesa();
         plato = pedido.getPlato();
+        System.out.println("COCINA - Recogio un pedido de "+plato.getPrecio()+" €");
     }
     
     private void servirPedido(){
         pedidoCliente[idCliente].add(plato);
-        mesa.notify();
+        //System.out.println("COCINA - Preparo un pedido de "+plato.getPrecio()+" €");
+        mesa.release();
     }
     
     private void prepararPedido() throws InterruptedException{
