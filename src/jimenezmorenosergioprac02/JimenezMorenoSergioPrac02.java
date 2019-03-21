@@ -4,12 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  * @author Sergio Jiménez Moreno
  */
@@ -26,9 +23,9 @@ public class JimenezMorenoSergioPrac02 {
         final int NUM_CLIENTES = 20;
         final int INICIO_VARIABLES = 0;
         final int AFORO = 10;
-    
-        ExecutorService executor = new ForkJoinPool();
-        ExecutorService executorCocina = new ForkJoinPool();
+     
+        ExecutorService executor = (ExecutorService)Executors.newCachedThreadPool();
+        ExecutorService executorCocina = (ExecutorService)Executors.newCachedThreadPool();
         
         List<Cliente> clientes = new ArrayList<>();
         
@@ -38,6 +35,7 @@ public class JimenezMorenoSergioPrac02 {
         Semaphore exmCocina = new Semaphore(1);
         Semaphore semPedidos = new Semaphore(0);
         Atributos atributos = new Atributos(INICIO_VARIABLES, INICIO_VARIABLES, AFORO);
+        ContadorClientes contador = new ContadorClientes(NUM_CLIENTES);
         
         ArrayList<Pedido> listaPlatos = new ArrayList<>();
         ArrayList[] pedidoCliente = new ArrayList[NUM_CLIENTES];
@@ -48,15 +46,15 @@ public class JimenezMorenoSergioPrac02 {
         for (int i = 0; i < NUM_CLIENTES; i++) {
             Cliente nuevoCliente;
             if(i%2 == 0){
-                nuevoCliente = new Cliente(i, TipoCliente.NORMAL, atributos, listaPlatos, pedidoCliente, exmRestaurante, semPremium, semNormal, exmCocina, semPedidos);
+                nuevoCliente = new Cliente(i, TipoCliente.NORMAL, atributos, contador, listaPlatos, pedidoCliente, exmRestaurante, semPremium, semNormal, exmCocina, semPedidos);
             }else{
-                nuevoCliente = new Cliente(i, TipoCliente.PREMIUM, atributos, listaPlatos, pedidoCliente, exmRestaurante, semPremium, semNormal, exmCocina, semPedidos);
+                nuevoCliente = new Cliente(i, TipoCliente.PREMIUM, atributos, contador, listaPlatos, pedidoCliente, exmRestaurante, semPremium, semNormal, exmCocina, semPedidos);
             }
             clientes.add(nuevoCliente);
         }
         
         System.out.println("Hilo(PRINCIPAL) : Crea la cocina");
-        Cocina cocina = new Cocina(listaPlatos, pedidoCliente, exmCocina, semPedidos);
+        Cocina cocina = new Cocina(listaPlatos, pedidoCliente, exmCocina, semPedidos,contador);
         System.out.println("Hilo(PRINCIPAL) : Ejecuta la cocina");
         executorCocina.execute(cocina);
         
@@ -80,8 +78,9 @@ public class JimenezMorenoSergioPrac02 {
         }
         System.out.println("Hilo(PRINCIPAL) : La recaudación total a sido "+recaudacion+" €");
         
-        System.out.println("Hilo(PRINCIPAL) : Va a interrumpir la cocina y los clientes.");
+        System.out.println("Hilo(PRINCIPAL) : Va a interrumpir los clientes.");
         executor.shutdown();
+        System.out.println("Hilo(PRINCIPAL) : Va a interrumpir la cocina.");
         executorCocina.shutdown();
         
     }

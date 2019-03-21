@@ -22,17 +22,19 @@ public class Cocina implements Runnable{
     // Variables de instancia
     private ArrayList<Pedido> listaPlatos;
     private ArrayList<Plato>[] pedidoCliente;
+    ContadorClientes contador;
     
     // Semaforos
     private Semaphore exmCocina;
     private Semaphore semPedidos;
 
-    public Cocina( ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmCocina, Semaphore semPedidos) {
+    public Cocina( ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmCocina, Semaphore semPedidos, ContadorClientes contador) {
         this.finServicio = false;
         this.listaPlatos = listaPlatos;
         this.pedidoCliente = pedidoCliente;
         this.exmCocina = exmCocina;
         this.semPedidos = semPedidos;
+        this.contador = contador;
     }
     
     @Override
@@ -42,12 +44,15 @@ public class Cocina implements Runnable{
                 recogerPedido();
                 prepararPedido();
                 servirPedido();
+                if(contador.getNumClientes() <= 5 && listaPlatos.isEmpty()){
+                    finServicio = true;
+                }
             } catch (InterruptedException ex) {
-                System.out.println("COCINA - El proceso va a finalizar.");
+                System.out.println("COCINA - ERROR : El proceso va a finalizar.");
                 finServicio = true;
             }
         }while(!finServicio);
-        
+        System.out.println("COCINA - El proceso a finalizado.");
     }
     
     private void recogerPedido() throws InterruptedException{

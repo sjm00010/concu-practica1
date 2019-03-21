@@ -1,7 +1,6 @@
 package jimenezmorenosergioprac02;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -36,6 +35,7 @@ public class Cliente implements Callable<Integer>{
     private int id;
     private TipoCliente tipoCliente;
     private Atributos atributos;
+    private ContadorClientes contador;
     private ArrayList<Pedido> listaPlatos;
     private ArrayList<Plato>[] pedidoCliente;
     
@@ -47,10 +47,11 @@ public class Cliente implements Callable<Integer>{
     private Semaphore semPedidos;
     private Semaphore semMesa;
 
-    public Cliente( int id, TipoCliente tipoCliente, Atributos atributos, ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmRestaurante, Semaphore semPremium, Semaphore semNormal, Semaphore exmCocina, Semaphore semPedidos) {
+    public Cliente( int id, TipoCliente tipoCliente, Atributos atributos,ContadorClientes contador, ArrayList<Pedido> listaPlatos, ArrayList<Plato>[] pedidoCliente, Semaphore exmRestaurante, Semaphore semPremium, Semaphore semNormal, Semaphore exmCocina, Semaphore semPedidos) {
         this.id = id;
         this.tipoCliente = tipoCliente;
         this.atributos = atributos;
+        this.contador = contador;
         this.listaPlatos = listaPlatos;
         this.pedidoCliente = pedidoCliente;
         this.exmRestaurante = exmRestaurante;
@@ -65,7 +66,6 @@ public class Cliente implements Callable<Integer>{
     @Override
     public Integer call() {
         try {
-            System.out.println("CLIENTE("+id+")-"+tipoCliente+"- Llegando al restaurante");
             llegar();
             System.out.println("CLIENTE("+id+")-"+tipoCliente+"- Llegada al restaurante : "+new Date());
             entrarRestaurante();
@@ -74,6 +74,7 @@ public class Cliente implements Callable<Integer>{
             comerPedido();
             salirRestaurante();
             System.out.println("CLIENTE("+id+")- Salida del restaurante : "+new Date());
+            contador.decrementaNumClientes();
         } catch (InterruptedException ex) {
             System.out.println("CLIENTE("+id+") - Se produjo un error, proceso interumpido.");
         }
@@ -97,8 +98,8 @@ public class Cliente implements Callable<Integer>{
         }
         // sería exmRestaurante.wait();
         mesa=atributos.getMesasLibres();
-        System.out.println("DATO - Aforo : "+atributos.getMesasLibres());
         atributos.decrementaMesasLibres();
+        System.out.println("DATO - Aforo : "+atributos.getMesasLibres());
         exmRestaurante.release();
     }
     
