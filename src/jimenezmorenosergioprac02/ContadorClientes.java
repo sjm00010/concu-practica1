@@ -21,7 +21,7 @@ public class ContadorClientes {
     }
 
     public int getNumClientes() {
-        System.out.println("DATO - Numero de clientes : "+ numClientes);
+        //System.out.println("DATO - Numero de clientes : "+ numClientes);
         return numClientes;
     }
 

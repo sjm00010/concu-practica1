@@ -82,6 +82,7 @@ public class JimenezMorenoSergioPrac02 {
         executor.shutdown();
         System.out.println("Hilo(PRINCIPAL) : Va a interrumpir la cocina.");
         executorCocina.shutdown();
+        System.out.println("Hilo(PRINCIPAL) : Programa finalizado");
         
     }
     

@@ -44,6 +44,9 @@ public class Cocina implements Runnable{
                 recogerPedido();
                 prepararPedido();
                 servirPedido();
+                // le pongo 5 ya que es el máximo de procesos que han finalizado juntos tras varias pruebas,
+                // si compruebas con 0 ó 1 hay veces que falla ya que finalizan varios de golpe
+                // y la cocina vuelve a iniciar el bucle.
                 if(contador.getNumClientes() <= 5 && listaPlatos.isEmpty()){
                     finServicio = true;
                 }
@@ -65,7 +68,7 @@ public class Cocina implements Runnable{
         idCliente = pedido.getIdCliente();
         mesa = pedido.getSemMesa();
         plato = pedido.getPlato();
-        System.out.println("COCINA - Recogio un pedido de "+plato.getPrecio()+" €");
+        System.out.println("COCINA - Recogió un pedido de "+plato.getPrecio()+" €");
     }
     
     private void servirPedido(){

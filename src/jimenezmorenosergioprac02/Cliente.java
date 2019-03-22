@@ -99,7 +99,7 @@ public class Cliente implements Callable<Integer>{
         // sería exmRestaurante.wait();
         mesa=atributos.getMesasLibres();
         atributos.decrementaMesasLibres();
-        System.out.println("DATO - Aforo : "+atributos.getMesasLibres());
+        //System.out.println("DATO - Aforo : "+atributos.getMesasLibres());
         exmRestaurante.release();
     }
     
